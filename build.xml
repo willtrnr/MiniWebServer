@@ -26,6 +26,9 @@
     <jar jarfile="${dist}/MiniWebServer-${DSTAMP}.jar" basedir="${build}"/>
   </target>
 
+  <target name="test" depends="compile" description="execute tests">
+  </target>
+
   <target name="clean" description="clean up">
     <!-- Delete the ${build} and ${dist} directory trees -->
     <delete dir="${build}"/>
