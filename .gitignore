@@ -5,5 +5,8 @@
 *.war
 *.ear
 
-*.sublime-*
+# Maven3
+target/
 
+# Sublime Text 2
+*.sublime-*

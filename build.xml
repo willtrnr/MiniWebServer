@@ -16,7 +16,17 @@
 
   <target name="compile" depends="init" description="compile the source">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <fileset dir="lib">
+          <include name="**/*.jar"/>
+          <exclude name="*javadoc*"/>
+          <exclude name="*source*"/>
+          <exclude name="*test*"/>
+        </fileset>
+      </classpath>
+    </javac>
   </target>
 
   <target name="dist" depends="compile" description="generate the distribution">
