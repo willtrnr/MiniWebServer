@@ -11,13 +11,13 @@ public class HttpServer implements Runnable {
 
   private int port = 80;
   private String docRoot = ".";
-  private Boolean dirListing = false;
+  private boolean dirListing = false;
 
   public HttpServer() {
     t = new Thread(this);
   }
 
-  public HttpServer(int port, String docRoot, Boolean dirListing) {
+  public HttpServer(int port, String docRoot, boolean dirListing) {
     this();
     this.port = port;
     this.docRoot = docRoot;
@@ -44,6 +44,7 @@ public class HttpServer implements Runnable {
       }
     } catch (IOException e) {
       LOGGER.severe("Server IOException: " + e.getMessage());
+      System.exit(1);
     }
   }
 }

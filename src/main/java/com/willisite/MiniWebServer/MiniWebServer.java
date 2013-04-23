@@ -32,7 +32,7 @@ public final class MiniWebServer {
   public static void main(String[] args) {
     String docRoot = ".";
     int port = 8080;
-    Boolean dirListing = false;
+    boolean dirListing = false;
 
     try {
       Properties prop = new Properties();
@@ -66,7 +66,7 @@ public final class MiniWebServer {
     LOGGER.info("");
     LOGGER.info("HTTP/1.1 418 I'm a teapot");
     LOGGER.info("Content-Length: 281");
-    LOGGER.info("Content-Type: text/plain; charset=utf-8");
+    LOGGER.info("Content-Type: text/plain");
     LOGGER.info("Connection: close");
     LOGGER.info("Srver: MiniwebServer");
     LOGGER.info("");

@@ -15,12 +15,18 @@ class InvalidRequestException extends RuntimeException {
   }
 }
 
+class InterruptedRequestException extends RuntimeException {
+  public InterruptedRequestException(String message) {
+    super(message);
+  }
+}
+
 public class Request {
   private static final Logger LOGGER = LoggerFactory.getLogger("Request");
 
   private String method = "GET";
   private URI uri = null;
-  private String version = "HTTP/1.1";
+  private String version = "HTTP/1.0";
   private HashMap<String, Header> headers = new HashMap<String, Header>();
 
   public Request()  {
@@ -38,7 +44,7 @@ public class Request {
     setMethod(method);
   }
 
-  public Request(InputStream is) throws IOException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
+  public Request(InputStream is) throws IOException, InterruptedRequestException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
     read(is);
   }
 
@@ -47,8 +53,9 @@ public class Request {
   }
 
   public void setMethod(String method) {
-    // TODO: Validate method
-    this.method = method.toUpperCase();
+    method = method.toUpperCase();
+    if (method.equals("HTTP/1.0") || method.equals("HTTP/1.1"))
+      this.method = method;
   }
 
   public URI getUri() {
@@ -73,7 +80,7 @@ public class Request {
   }
 
   public Header getHeader(String key) {
-    return headers.get(WordUtils.capitalizeFully(key));
+    return headers.get(WordUtils.capitalizeFully(key, '-'));
   }
 
   public void setHeader(Header header) {
@@ -97,17 +104,16 @@ public class Request {
 
   public void parseRequest(String request) throws InvalidRequestException, URISyntaxException {
     String[] parts = request.trim().split("\\s+");
-    if (parts.length != 3) throw new InvalidRequestException("Invalid request line format");
+    if (parts.length != 3) throw new InvalidRequestException("Invalid request line format: " + request);
     setMethod(parts[0]);
     setUri(parts[1]);
     setVersion(parts[2]);
   }
 
-  public void read(InputStream is) throws IOException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
+  public void read(InputStream is) throws IOException, InterruptedRequestException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
     String line = Utils.readLine(is);
-    if (line == null) throw new InvalidRequestException("No request line was received");
+    if (line == null) throw new InterruptedRequestException("No request line was received");
     parseRequest(line);
-    LOGGER.info(this.toString());
     while (!StringUtils.isBlank(line = Utils.readLine(is))) setHeader(line);
     if (getHeader("Content-Length") != null) {
       int len = 0;
@@ -123,7 +129,7 @@ public class Request {
 
   public Response createResponse() {
     Response response = new Response();
-    response.setMethod(getMethod());
+    response.setRequest(this);
     response.setVersion(getVersion());
     if (getHeader("Host") != null) response.setHeader(getHeader("Host"));
     if (getHeader("Connection") != null) response.setHeader(getHeader("Connection"));

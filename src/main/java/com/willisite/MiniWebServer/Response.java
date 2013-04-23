@@ -1,16 +1,22 @@
 package com.willisite.MiniWebServer;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.FileNameMap;
 import java.net.URLConnection;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPOutputStream;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -19,7 +25,7 @@ import org.apache.tika.Tika;
 public class Response {
   private static final Logger LOGGER = LoggerFactory.getLogger("Response");
 
-  private String method = "GET";
+  private Request request = new Request();
   private String version = "HTTP/1.1";
   private int statusCode = 200;
   private HashMap<String, Header> headers = new HashMap<String, Header>();
@@ -34,13 +40,16 @@ public class Response {
     setStatusCode(statusCode);
   }
 
-  public String getMethod() {
-    return method;
+  public Response(Request request) {
+    setRequest(request);
   }
 
-  public void setMethod(String method) {
-    // TODO: Validate method
-    this.method = method.toUpperCase();
+  public Request getRequest() {
+    return request;
+  }
+
+  public void setRequest(Request request) {
+    this.request = request;
   }
 
   public String getVersion() {
@@ -63,7 +72,7 @@ public class Response {
   }
 
   public Header getHeader(String key) {
-    return headers.get(WordUtils.capitalizeFully(key));
+    return headers.get(WordUtils.capitalizeFully(key, '-'));
   }
 
   public void setHeader(Header header) {
@@ -94,37 +103,71 @@ public class Response {
     }
     out.write("\r\n".getBytes());
     out.flush();
-    LOGGER.info(this.toString());
+    LOGGER.info(this.toString() + " " + getRequest().getUri().toString());
   }
 
-  public void send(OutputStream os, byte[] data, int len) throws IOException {
-    setHeader("Content-Length", Integer.toString(data.length));
-    sendHeaders(os);
+  private void sendStream(OutputStream os, InputStream is) throws IOException {
+    int length;
+    byte[] buffer = new byte[1024*8];
+    if (request.getHeader("Accept-Encoding") != null) {
+      String encodings = request.getHeader("Accept-Encoding").getValue();
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      if (encodings.contains("gzip")) {
+        setHeader("Content-Encoding", "gzip");
+        GZIPOutputStream out = new GZIPOutputStream(bos);
+        while ((length = is.read(buffer)) > 0) out.write(buffer, 0, length);
+        out.finish();
+        out.flush();
+      } else if (encodings.contains("deflate")) {
+        setHeader("Content-Encoding", "deflate");
+        DeflaterOutputStream out = new DeflaterOutputStream(bos);
+        while ((length = is.read(buffer)) > 0) out.write(buffer, 0, length);
+        out.finish();
+        out.flush();
+      }
+      setHeader("Content-Length", Integer.toString(bos.toByteArray().length));
+      ByteArrayInputStream in = new ByteArrayInputStream(bos.toByteArray());
 
-    if (!getMethod().equals("HEAD")) {
+      sendHeaders(os);
       BufferedOutputStream out = new BufferedOutputStream(os);
-      out.write(data, 0, len);
+      while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
+      out.flush();
+    } else {
+      sendHeaders(os);
+      BufferedOutputStream out = new BufferedOutputStream(os);
+      while ((length = is.read(buffer)) > 0) out.write(buffer, 0, length);
       out.flush();
     }
   }
 
   public void send(OutputStream os, byte[] data) throws IOException {
-    send(os, data, data.length);
+    setHeader("Content-Length", Integer.toString(data.length));
+    if (getRequest().getMethod().equals("HEAD")) {
+      sendHeaders(os);
+    } else {
+      sendStream(os, new ByteArrayInputStream(data));
+    }
   }
 
   public void send(OutputStream os, File file) throws IOException {
-    setHeader("Content-Length", Long.toString(file.length()));
-    setHeader("Content-Type", new Tika().detect(file));
     setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date(file.lastModified())));
-    sendHeaders(os);
-
-    if (!getMethod().equals("HEAD")) {
-      BufferedOutputStream out = new BufferedOutputStream(os);
-      FileInputStream in = new FileInputStream(file);
-      int length;
-      byte[] buffer = new byte[1024*8];
-      while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
-      out.flush();
+    if (request.getHeader("If-Modified-Since") != null) {
+      try {
+        Date since = Utils.RFC1123DATEFORMAT.parse(request.getHeader("If-Modified-Since").getValue());
+        if (since.getTime() >= file.lastModified()) {
+          setStatusCode(304);
+          sendHeaders(os);
+          return;
+        }
+      } catch (ParseException e) {
+      } catch (NumberFormatException e) {}
+    }
+    setHeader("Content-Type", new Tika().detect(file));
+    setHeader("Content-Length", Long.toString(file.length()));
+    if (getRequest().getMethod().equals("HEAD")) {
+      sendHeaders(os);
+    } else {
+      sendStream(os, new FileInputStream(file));
     }
   }
 }

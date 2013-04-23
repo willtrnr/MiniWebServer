@@ -29,7 +29,6 @@ public class ConnectionHandler implements Runnable {
   @Override
   public void run() {
     try {
-      client.setSoTimeout(30 * 1000);
       for (int maxRequests = 3; maxRequests >= 1; --maxRequests) {
         try {
           Request request = new Request(client.getInputStream());
@@ -61,20 +60,25 @@ public class ConnectionHandler implements Runnable {
               response.sendHeaders(client.getOutputStream());
             }
           }
+        } catch (InterruptedRequestException e) {
+          break;
         } catch (InvalidRequestException e) {
           Response response = new Response(400);
           response.sendHeaders(client.getOutputStream());
+          LOGGER.warning(e.getMessage());
         } catch (URISyntaxException e) {
           Response response = new Response(400);
           response.sendHeaders(client.getOutputStream());
+          LOGGER.warning(e.getMessage());
         } catch (InvalidHeaderException e) {
           Response response = new Response(400);
           response.sendHeaders(client.getOutputStream());
+          LOGGER.warning(e.getMessage());
         }
       }
       client.close();
     } catch (IOException e) {
-      LOGGER.throwing("ConnectionHandler", "run", e);
+      LOGGER.severe(e.getMessage());
     }
   }
 }
