@@ -30,11 +30,12 @@ public class ConnectionHandler implements Runnable {
   public void run() {
     try {
       client.setSoTimeout(30 * 1000);
-      for (int maxRequests = 5; maxRequests >= 1; --maxRequests) {
+      for (int maxRequests = 3; maxRequests >= 1; --maxRequests) {
         try {
           Request request = new Request(client.getInputStream());
           Response response = request.createResponse();
           if (response.getHeader("Connection") == null || response.getHeader("Connection").getValue().equals("close")) maxRequests = 1;
+          if (maxRequests == 1) response.setHeader("Connection", "close");
 
           if (request.getUri().getPath().equals("/teapot")) {
             response.setStatusCode(418);
