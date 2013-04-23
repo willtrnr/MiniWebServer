@@ -5,21 +5,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.FileNameMap;
+import java.net.URLConnection;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
-import net.sf.jmimemagic.Magic;
-import net.sf.jmimemagic.MagicException;
-import net.sf.jmimemagic.MagicMatch;
-import net.sf.jmimemagic.MagicMatchNotFoundException;
-import net.sf.jmimemagic.MagicParseException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
+import org.apache.tika.Tika;
 
 public class Response {
   private static final Logger LOGGER = LoggerFactory.getLogger("Response");
 
+  private String method = "GET";
   private String version = "HTTP/1.1";
   private int statusCode = 200;
   private HashMap<String, Header> headers = new HashMap<String, Header>();
@@ -32,6 +32,15 @@ public class Response {
   public Response(int statusCode) {
     this();
     setStatusCode(statusCode);
+  }
+
+  public String getMethod() {
+    return method;
+  }
+
+  public void setMethod(String method) {
+    // TODO: Validate method
+    this.method = method.toUpperCase();
   }
 
   public String getVersion() {
@@ -73,11 +82,11 @@ public class Response {
 
   @Override
   public String toString() {
-    return version + " " + statusCode + " " + ((statusCode == 418) ? "I'm a teapot" : HttpStatus.getStatusText(statusCode));
+    return getVersion() + " " + getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode()));
   }
 
   public void sendHeaders(OutputStream os) throws IOException {
-    setHeader("Date", HttpServer.RFC1123DATEFORMAT.format(new Date()));
+    setHeader("Date", Utils.RFC1123DATEFORMAT.format(new Date()));
     BufferedOutputStream out = new BufferedOutputStream(os);
     out.write(new String(this.toString() + "\r\n").getBytes());
     for (Header header : headers.values()) {
@@ -91,9 +100,12 @@ public class Response {
   public void send(OutputStream os, byte[] data, int len) throws IOException {
     setHeader("Content-Length", Integer.toString(data.length));
     sendHeaders(os);
-    BufferedOutputStream out = new BufferedOutputStream(os);
-    out.write(data, 0, len);
-    out.flush();
+
+    if (!getMethod().equals("HEAD")) {
+      BufferedOutputStream out = new BufferedOutputStream(os);
+      out.write(data, 0, len);
+      out.flush();
+    }
   }
 
   public void send(OutputStream os, byte[] data) throws IOException {
@@ -102,20 +114,17 @@ public class Response {
 
   public void send(OutputStream os, File file) throws IOException {
     setHeader("Content-Length", Long.toString(file.length()));
-    setHeader("Content-Type", "application/octet-stream");
-    try {
-      MagicMatch match = new Magic().getMagicMatch(file, true, true);
-      setHeader("Content-Type", match.getMimeType());
-    } catch (MagicParseException e) {
-    } catch (MagicMatchNotFoundException e) {
-    } catch (MagicException e) {}
+    setHeader("Content-Type", new Tika().detect(file));
+    setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date(file.lastModified())));
     sendHeaders(os);
 
-    BufferedOutputStream out = new BufferedOutputStream(os);
-    FileInputStream in = new FileInputStream(file);
-    int length;
-    byte[] buffer = new byte[1024*8];
-    while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
-    out.flush();
+    if (!getMethod().equals("HEAD")) {
+      BufferedOutputStream out = new BufferedOutputStream(os);
+      FileInputStream in = new FileInputStream(file);
+      int length;
+      byte[] buffer = new byte[1024*8];
+      while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
+      out.flush();
+    }
   }
 }

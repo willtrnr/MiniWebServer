@@ -19,9 +19,9 @@
       <version>3.1</version>
     </dependency>
     <dependency>
-      <groupId>jmimemagic</groupId>
-      <artifactId>jmimemagic</artifactId>
-      <version>0.1.2</version>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-core</artifactId>
+      <version>1.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

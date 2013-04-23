@@ -3,7 +3,6 @@ package com.willisite.MiniWebServer;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.logging.Logger;
 
 public class HttpServer implements Runnable {
@@ -13,8 +12,6 @@ public class HttpServer implements Runnable {
   private int port = 80;
   private String docRoot = ".";
   private Boolean dirListing = false;
-
-  public static final SimpleDateFormat RFC1123DATEFORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
   public HttpServer() {
     t = new Thread(this);
