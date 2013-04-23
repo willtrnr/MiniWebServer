@@ -32,14 +32,13 @@ public class ConnectionHandler implements Runnable {
       client.setSoTimeout(30 * 1000);
       for (int maxRequests = 5; maxRequests >= 1; --maxRequests) {
         try {
-          if (maxRequests != 5) LOGGER.info("Reusing connection");
           Request request = new Request(client.getInputStream());
           Response response = request.createResponse();
           if (response.getHeader("Connection") == null || response.getHeader("Connection").getValue().equals("close")) maxRequests = 1;
 
           if (request.getUri().getPath().equals("/teapot")) {
             response.setStatusCode(418);
-            response.setHeader("Content-Type", "text/plain; charset=utf-8");
+            response.setHeader("Content-Type", "text/plain");
             response.send(client.getOutputStream(), TEAPOT.getBytes());
           } else {
             // OMG OMG OMG OMG TO FUCKING DO: FIX THIS SECURITY HOLE AND SHIT HANDLING ASAP

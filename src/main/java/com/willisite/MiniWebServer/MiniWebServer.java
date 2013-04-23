@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 /*
 HTTP/1.1 418 I'm a teapot
 Content-Length: 281
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Connection: close
 Server: MiniWebServer
 
