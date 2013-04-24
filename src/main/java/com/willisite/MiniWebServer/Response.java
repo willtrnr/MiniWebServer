@@ -41,6 +41,7 @@ public class Response {
   }
 
   public Response(Request request) {
+    this();
     setRequest(request);
   }
 
@@ -103,7 +104,7 @@ public class Response {
     }
     out.write("\r\n".getBytes());
     out.flush();
-    LOGGER.info(this.toString() + " " + getRequest().getUri().toString());
+    LOGGER.info(getRequest().getMethod() + " " + Integer.toString(getStatusCode()) + " " + getRequest().getUri().toString());
   }
 
   private void sendStream(OutputStream os, InputStream is) throws IOException {
