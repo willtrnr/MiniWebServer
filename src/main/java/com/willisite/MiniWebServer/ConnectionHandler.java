@@ -32,7 +32,7 @@ public class ConnectionHandler implements Runnable {
       for (int maxRequests = 3; maxRequests >= 1; --maxRequests) {
         try {
           Request request = new Request(client.getInputStream());
-          Response response = request.createResponse();
+          Response response = new Response(request);
           if (response.getHeader("Connection") == null || response.getHeader("Connection").getValue().equals("close")) maxRequests = 1;
           if (maxRequests == 1) response.setHeader("Connection", "close");
 

@@ -54,8 +54,8 @@ public class Request {
 
   public void setMethod(String method) {
     method = method.toUpperCase();
-    if (method.equals("HTTP/1.0") || method.equals("HTTP/1.1"))
-      this.method = method;
+    // TODO: Validate method
+    this.method = method;
   }
 
   public URI getUri() {
@@ -75,8 +75,8 @@ public class Request {
   }
 
   public void setVersion(String version) {
-    // TODO: Validate version
-    this.version = version;
+    version = version.toUpperCase();
+    if (version.equals("HTTP/1.0") || version.equals("HTTP/1.1")) this.version = version;
   }
 
   public Header getHeader(String key) {
@@ -95,6 +95,10 @@ public class Request {
   public void setHeader(String header) {
     Header h = Header.parseHeader(header);
     setHeader(h);
+  }
+
+  public void removeHeader(String key) {
+    headers.remove(key);
   }
 
   @Override
@@ -125,14 +129,5 @@ public class Request {
       // TODO: Handle post
       is.skip(len);
     }
-  }
-
-  public Response createResponse() {
-    Response response = new Response();
-    response.setRequest(this);
-    response.setVersion(getVersion());
-    if (getHeader("Host") != null) response.setHeader(getHeader("Host"));
-    if (getHeader("Connection") != null) response.setHeader(getHeader("Connection"));
-    return response;
   }
 }

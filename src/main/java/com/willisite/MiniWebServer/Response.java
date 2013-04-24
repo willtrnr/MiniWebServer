@@ -26,7 +26,7 @@ public class Response {
   private static final Logger LOGGER = LoggerFactory.getLogger("Response");
 
   private Request request = new Request();
-  private String version = "HTTP/1.1";
+  private String version = "HTTP/1.0";
   private int statusCode = 200;
   private HashMap<String, Header> headers = new HashMap<String, Header>();
 
@@ -50,6 +50,9 @@ public class Response {
   }
 
   public void setRequest(Request request) {
+    setVersion(request.getVersion());
+    if (request.getHeader("Host") != null) setHeader(request.getHeader("Host"));
+    if (request.getHeader("Connection") != null) setHeader(request.getHeader("Connection"));
     this.request = request;
   }
 
@@ -58,8 +61,8 @@ public class Response {
   }
 
   public void setVersion(String version) {
-    // TODO: Validate version
-    this.version = version;
+    version = version.toUpperCase();
+    if (version.equals("HTTP/1.0") || version.equals("HTTP/1.1")) this.version = version;
   }
 
   public int getStatusCode() {
@@ -88,6 +91,10 @@ public class Response {
   public void setHeader(String header) {
     Header h = Header.parseHeader(header);
     setHeader(h);
+  }
+
+  public void removeHeader(String key) {
+    headers.remove(key);
   }
 
   @Override
@@ -167,7 +174,7 @@ public class Response {
     setHeader("Content-Length", Long.toString(file.length()));
     if (getRequest().getMethod().equals("HEAD")) {
       sendHeaders(os);
-    } else {
+    } else {//if (getRequest().getMethod().equals("GET")) {
       sendStream(os, new FileInputStream(file));
     }
   }
