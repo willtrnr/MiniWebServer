@@ -1,5 +1,6 @@
 package com.willisite.MiniWebServer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -28,6 +29,7 @@ public class Request {
   private URI uri = null;
   private String version = "HTTP/1.0";
   private HashMap<String, Header> headers = new HashMap<String, Header>();
+  private byte[] body = null;
 
   public Request()  {
     try {
@@ -101,6 +103,18 @@ public class Request {
     headers.remove(key);
   }
 
+  public HashMap<String, Header> getHeaders() {
+    return headers;
+  }
+
+  public byte[] getBody() {
+    return body;
+  }
+
+  public void setBody(byte[] body) {
+    this.body = body;
+  }
+
   @Override
   public String toString() {
     return getMethod() + " " + getUri() + " " + getVersion();
@@ -127,8 +141,16 @@ public class Request {
       } catch (NumberFormatException e) {
         throw new InvalidHeaderException("Invalid value for Content-Length");
       }
-      // TODO: Handle post
-      is.skip(len);
+      if (len > 0) {
+        int read = 0;
+        byte[] buffer = new byte[1024*8];
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while (len > 0) {
+          len -= (read = is.read(buffer, 0, (len > 1024*8) ? 1024*8 : len));
+          bos.write(buffer, 0, read);
+        }
+        setBody(bos.toByteArray());
+      }
     }
   }
 }

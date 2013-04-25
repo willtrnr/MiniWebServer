@@ -34,39 +34,39 @@ public class ConnectionHandler implements Runnable {
         try {
           Request request = new Request(client.getInputStream());
           Response response = new Response(request);
-          if (response.getHeader("Connection") != null && response.getHeader("Connection").getValue().equals("keep-alive")) maxRequests = 3;
+          if ((request.getMethod().equals("GET") || request.getMethod().equals("HEAD")) && response.getHeader("Connection") != null && response.getHeader("Connection").getValue().equals("keep-alive")) maxRequests = 3;
           else maxRequests = 1;
           if (r >= maxRequests) response.setHeader("Connection", "close");
 
-          if (request.getMethod().equals("GET") || request.getMethod().equals("HEAD")) {
-            if (request.getUri().getPath().equals("/teapot")) {
-              response.setStatusCode(418);
-              response.setHeader("Content-Type", "text/plain");
-              response.send(client.getOutputStream(), TEAPOT.getBytes());
-            } else {
-              // OMG OMG OMG OMG TO FUCKING DO: FIX THIS SECURITY HOLE AND SHIT HANDLING ASAP
-              File file = new File(docRoot, request.getUri().getPath());
-              if (file.isFile()) {
+          if (request.getUri().getPath().equals("/teapot")) {
+            response.setStatusCode(418);
+            response.setHeader("Content-Type", "text/plain");
+            response.send(client.getOutputStream(), TEAPOT.getBytes());
+          } else {
+            // OMG OMG OMG OMG TO FUCKING DO: FIX THIS SECURITY HOLE AND SHIT HANDLING ASAP
+            File file = new File(docRoot, request.getUri().getPath());
+            if (file.isFile()) {
+              response.setStatusCode(200);
+              if (file.getName().endsWith(".php")) response.executePHPRedneckStyle(client, file);
+              else response.send(client.getOutputStream(), file);
+            } else if (file.isDirectory()) {
+              if (new File(file, "index.htm").isFile()) {
                 response.setStatusCode(200);
-                if (file.getName().endsWith(".php")) response.executePHPRedneckStyle(client.getOutputStream(), file);
-                else response.send(client.getOutputStream(), file);
-              } else if (file.isDirectory()) {
-                file = new File(file, "index.html");
-                if (file.isFile()) {
-                  response.setStatusCode(200);
-                  response.send(client.getOutputStream(), file);
-                } else {
-                  response.setStatusCode(403);
-                  response.sendHeaders(client.getOutputStream());
-                }
+                response.send(client.getOutputStream(), new File(file, "index.htm"));
+              } else if (new File(file, "index.html").isFile()) {
+                response.setStatusCode(200);
+                response.send(client.getOutputStream(), new File(file, "index.html"));
+              } else if (new File(file, "index.php").isFile()) {
+                response.setStatusCode(200);
+                response.executePHPRedneckStyle(client, new File(file, "index.php"));
               } else {
-                response.setStatusCode(404);
+                response.setStatusCode(403);
                 response.sendHeaders(client.getOutputStream());
               }
+            } else {
+              response.setStatusCode(404);
+              response.sendHeaders(client.getOutputStream());
             }
-          } else {
-            response.setStatusCode(501);
-            response.sendHeaders(client.getOutputStream());
           }
         } catch (InterruptedRequestException e) {
           break;

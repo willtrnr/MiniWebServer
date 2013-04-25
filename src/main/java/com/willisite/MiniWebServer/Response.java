@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.FileNameMap;
+import java.net.Socket;
 import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.Collection;
@@ -98,6 +99,10 @@ public class Response {
     headers.remove(key);
   }
 
+  public HashMap<String, Header> getHeaders() {
+    return headers;
+  }
+
   @Override
   public String toString() {
     return getVersion() + " " + getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode()));
@@ -118,8 +123,8 @@ public class Response {
   private void sendStream(OutputStream os, InputStream is) throws IOException {
     int length;
     byte[] buffer = new byte[1024*8];
-    if (request.getHeader("Accept-Encoding") != null) {
-      String encodings = request.getHeader("Accept-Encoding").getValue();
+    if (getRequest().getHeader("Accept-Encoding") != null && getHeader("Content-Encoding") == null) {
+      String encodings = getRequest().getHeader("Accept-Encoding").getValue();
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       if (encodings.contains("gzip")) {
         setHeader("Content-Encoding", "gzip");
@@ -160,9 +165,9 @@ public class Response {
 
   public void send(OutputStream os, File file) throws IOException {
     setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date(file.lastModified())));
-    if (request.getHeader("If-Modified-Since") != null) {
+    if (getRequest().getHeader("If-Modified-Since") != null) {
       try {
-        Date since = Utils.RFC1123DATEFORMAT.parse(request.getHeader("If-Modified-Since").getValue());
+        Date since = Utils.RFC1123DATEFORMAT.parse(getRequest().getHeader("If-Modified-Since").getValue());
         if (since.getTime() >= file.lastModified()) {
           setStatusCode(304);
           sendHeaders(os);
@@ -180,24 +185,64 @@ public class Response {
     }
   }
 
-  public void executePHPRedneckStyle(OutputStream os, File file) throws IOException {
+  public void executePHPRedneckStyle(Socket client, File file) throws IOException {
     LOGGER.warning("Executing PHP in a very redneck fashion");
 
-    ProcessBuilder pb = new ProcessBuilder("/usr/bin/php-cgi", file.getAbsolutePath());
+    ProcessBuilder pb = new ProcessBuilder("/usr/bin/php-cgi", "-d", "cgi.force_redirect=0", file.getAbsolutePath());
     pb.redirectErrorStream(true);
+    pb.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
+    for (Header header : request.getHeaders().values()) {
+      pb.environment().put("HTTP_" + header.getKey().toUpperCase().replace('-', '_'), header.getValue());
+    }
+    if (getHeader("Host") != null) {
+      String[] parts = getHeader("Host").getValue().split(":", 2);
+      pb.environment().put("SERVER_NAME", parts[0]);
+      if (parts.length == 2) {
+        pb.environment().put("SERVER_PORT", parts[1]);
+      }
+    } else {
+      pb.environment().put("HTTP_HOST", "localhost");
+      pb.environment().put("SERVER_NAME", "localhost");
+      pb.environment().put("SERVER_PORT", "8080");
+    }
+    if (getRequest().getHeader("Content-Type") != null) pb.environment().put("CONTENT_TYPE", getRequest().getHeader("Content-Type").getValue());
+    if (getRequest().getBody() != null) pb.environment().put("CONTENT_LENGTH", Integer.toString(getRequest().getBody().length));
+    if (getRequest().getUri().getRawQuery() != null) pb.environment().put("QUERY_STRING", getRequest().getUri().getRawQuery());
+    pb.environment().put("REQUEST_METHOD", getRequest().getMethod());
+    pb.environment().put("REQUEST_URI", getRequest().getUri().toString());
+    pb.environment().put("SCRIPT_FILENAME", file.getAbsolutePath());
+    pb.environment().put("SCRIPT_NAME", file.getName());
+    pb.environment().put("SERVER_ADDR", "127.0.0.1");
+    pb.environment().put("SERVER_ADMIN", "nobody@exemple.com");
+    pb.environment().put("SERVER_NAME", "localhost");
+    pb.environment().put("SERVER_PROTOCOL", getVersion());
     Process proc = pb.start();
     BufferedInputStream in = new BufferedInputStream(proc.getInputStream());
+    if (getRequest().getBody() != null) {
+      BufferedOutputStream out = new BufferedOutputStream(proc.getOutputStream());
+      out.write(getRequest().getBody());
+      out.flush();
+      out.close();
+    }
 
     String line;
     while (!StringUtils.isBlank(line = Utils.readLine(in))) setHeader(line);
-
     int length = 0;
     byte[] buffer = new byte[1024*8];
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     while ((length = in.read(buffer)) > 0) bos.write(buffer, 0, length);
 
-    setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date()));
-    setHeader("Content-Length", Long.toString(bos.toByteArray().length));
-    sendStream(os, new ByteArrayInputStream(bos.toByteArray()));
+    if (getHeader("Status") != null) {
+      setStatusCode(Integer.parseInt(getHeader("Status").getValue().substring(0, 2)));
+      removeHeader("Status");
+    }
+    if (getHeader("Location") != null) {
+      if (getStatusCode() < 300 || getStatusCode() > 399) setStatusCode(301);
+      sendHeaders(client.getOutputStream());
+    } else {
+      setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date()));
+      setHeader("Content-Length", Long.toString(bos.toByteArray().length));
+      sendStream(client.getOutputStream(), new ByteArrayInputStream(bos.toByteArray()));
+    }
   }
 }

@@ -32,7 +32,6 @@ public final class MiniWebServer {
   public static void main(String[] args) {
     String docRoot = ".";
     int port = 8080;
-    boolean dirListing = false;
 
     try {
       Properties prop = new Properties();
@@ -43,14 +42,12 @@ public final class MiniWebServer {
         LOGGER.warning("Invalid value for \"port\" in \"server.conf\", proceeding with default value");
       }
       docRoot = prop.getProperty("docroot", ".");
-      dirListing = Boolean.parseBoolean(prop.getProperty("dirlisting", "false"));
     } catch (IOException e) {
       LOGGER.info("Creating \"server.conf\" with default values");
       try {
         Properties prop = new Properties();
         prop.setProperty("port", Integer.toString(port));
         prop.setProperty("docroot", docRoot);
-        prop.setProperty("dirlisting", Boolean.toString(dirListing));
         prop.store(new FileOutputStream("server.conf"), null);
       } catch (IOException ex) {
         LOGGER.warning("Could not create \"server.conf\": " + e.getMessage());
@@ -83,7 +80,7 @@ public final class MiniWebServer {
     LOGGER.info("    `.            :.,'");
     LOGGER.info("      `-.________,-'");
     LOGGER.info("");
-    HttpServer server = new HttpServer(port, docRoot, dirListing);
+    HttpServer server = new HttpServer(port, docRoot);
     server.start();
     while (true) {
       try {

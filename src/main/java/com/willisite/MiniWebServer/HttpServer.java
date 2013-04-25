@@ -11,17 +11,15 @@ public class HttpServer implements Runnable {
 
   private int port = 80;
   private String docRoot = ".";
-  private boolean dirListing = false;
 
   public HttpServer() {
     t = new Thread(this);
   }
 
-  public HttpServer(int port, String docRoot, boolean dirListing) {
+  public HttpServer(int port, String docRoot) {
     this();
     this.port = port;
     this.docRoot = docRoot;
-    this.dirListing = dirListing;
   }
 
   public void start() {
