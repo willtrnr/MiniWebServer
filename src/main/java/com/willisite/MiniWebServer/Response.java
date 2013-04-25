@@ -208,10 +208,12 @@ public class Response {
     if (getRequest().getHeader("Content-Type") != null) pb.environment().put("CONTENT_TYPE", getRequest().getHeader("Content-Type").getValue());
     if (getRequest().getBody() != null) pb.environment().put("CONTENT_LENGTH", Integer.toString(getRequest().getBody().length));
     if (getRequest().getUri().getRawQuery() != null) pb.environment().put("QUERY_STRING", getRequest().getUri().getRawQuery());
+    pb.environment().put("REMOTE_ADDR", client.getInetAddress().getHostAddress());
+    pb.environment().put("REMOTE_PORT", Integer.toString(client.getPort()));
     pb.environment().put("REQUEST_METHOD", getRequest().getMethod());
     pb.environment().put("REQUEST_URI", getRequest().getUri().toString());
     pb.environment().put("SCRIPT_FILENAME", file.getAbsolutePath());
-    pb.environment().put("SCRIPT_NAME", file.getName());
+    pb.environment().put("SCRIPT_NAME", getRequest().getUri().getPath());
     pb.environment().put("SERVER_ADDR", "127.0.0.1");
     pb.environment().put("SERVER_ADMIN", "nobody@exemple.com");
     pb.environment().put("SERVER_NAME", "localhost");

@@ -10,3 +10,7 @@ target/
 
 # Sublime Text 2
 *.sublime-*
+
+# Test htdocs
+htdocs/
+
