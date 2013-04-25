@@ -44,7 +44,7 @@ public class Request {
     setMethod(method);
   }
 
-  public Request(InputStream is) throws IOException, InterruptedRequestException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
+  public Request(InputStream is) throws IOException, URISyntaxException {
     read(is);
   }
 
@@ -54,8 +54,8 @@ public class Request {
 
   public void setMethod(String method) {
     method = method.toUpperCase();
-    // TODO: Validate method
-    this.method = method;
+    if (method.matches("^(OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)$")) this.method = method;
+    else throw new InvalidRequestException("Invalid method");
   }
 
   public URI getUri() {
@@ -106,7 +106,7 @@ public class Request {
     return getMethod() + " " + getUri() + " " + getVersion();
   }
 
-  public void parseRequest(String request) throws InvalidRequestException, URISyntaxException {
+  public void parseRequest(String request) throws URISyntaxException {
     String[] parts = request.trim().split("\\s+");
     if (parts.length != 3) throw new InvalidRequestException("Invalid request line format: " + request);
     setMethod(parts[0]);
@@ -114,11 +114,12 @@ public class Request {
     setVersion(parts[2]);
   }
 
-  public void read(InputStream is) throws IOException, InterruptedRequestException, InvalidRequestException, URISyntaxException, InvalidHeaderException {
-    String line = Utils.readLine(is);
-    if (line == null) throw new InterruptedRequestException("No request line was received");
-    parseRequest(line);
+  public void read(InputStream is) throws IOException, URISyntaxException {
+    String requestLine = Utils.readLine(is);
+    if (requestLine == null) throw new InterruptedRequestException("No request line was received");
+    String line;
     while (!StringUtils.isBlank(line = Utils.readLine(is))) setHeader(line);
+    parseRequest(requestLine);
     if (getHeader("Content-Length") != null) {
       int len = 0;
       try {

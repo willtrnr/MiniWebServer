@@ -1,5 +1,6 @@
 package com.willisite.MiniWebServer;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,7 +32,7 @@ public class Response {
   private HashMap<String, Header> headers = new HashMap<String, Header>();
 
   public Response() {
-    setHeader("Server", "MiniWebServer");
+    setHeader("Server", "MiniWebServer/0.0.1");
     setHeader("Connection", "close");
   }
 
@@ -175,7 +176,28 @@ public class Response {
     if (getRequest().getMethod().equals("HEAD")) {
       sendHeaders(os);
     } else {//if (getRequest().getMethod().equals("GET")) {
-      sendStream(os, new FileInputStream(file));
+      sendStream(os, new BufferedInputStream(new FileInputStream(file)));
     }
+  }
+
+  public void executePHPRedneckStyle(OutputStream os, File file) throws IOException {
+    LOGGER.warning("Executing PHP in a very redneck fashion");
+
+    ProcessBuilder pb = new ProcessBuilder("/usr/bin/php-cgi", file.getAbsolutePath());
+    pb.redirectErrorStream(true);
+    Process proc = pb.start();
+    BufferedInputStream in = new BufferedInputStream(proc.getInputStream());
+
+    String line;
+    while (!StringUtils.isBlank(line = Utils.readLine(in))) setHeader(line);
+
+    int length = 0;
+    byte[] buffer = new byte[1024*8];
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    while ((length = in.read(buffer)) > 0) bos.write(buffer, 0, length);
+
+    setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date()));
+    setHeader("Content-Length", Long.toString(bos.toByteArray().length));
+    sendStream(os, new ByteArrayInputStream(bos.toByteArray()));
   }
 }
