@@ -61,26 +61,26 @@ public class ConnectionHandler implements Runnable {
                 response.executePHPRedneckStyle(client, new File(file, "index.php"));
               } else {
                 response.setStatusCode(403);
-                response.sendHeaders(client.getOutputStream());
+                response.sendError(client.getOutputStream());
               }
             } else {
               response.setStatusCode(404);
-              response.sendHeaders(client.getOutputStream());
+              response.sendError(client.getOutputStream());
             }
           }
         } catch (InterruptedRequestException e) {
           break;
         } catch (InvalidRequestException e) {
           Response response = new Response(400);
-          response.sendHeaders(client.getOutputStream());
+          response.sendError(client.getOutputStream());
           LOGGER.warning(e.getMessage());
         } catch (URISyntaxException e) {
           Response response = new Response(400);
-          response.sendHeaders(client.getOutputStream());
+          response.sendError(client.getOutputStream());
           LOGGER.warning(e.getMessage());
         } catch (InvalidHeaderException e) {
           Response response = new Response(400);
-          response.sendHeaders(client.getOutputStream());
+          response.sendError(client.getOutputStream());
           LOGGER.warning(e.getMessage());
         }
       }

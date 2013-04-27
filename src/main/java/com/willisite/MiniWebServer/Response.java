@@ -9,9 +9,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.FileNameMap;
 import java.net.Socket;
-import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
@@ -185,10 +183,26 @@ public class Response {
     }
   }
 
+  public void sendError(OutputStream os) throws IOException {
+    String errorPage = "<!DOCTYPE html><html><head><title>" +
+      getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode())) +
+      "</title></head><body><h1>" +
+      getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode())) +
+      "</h1></body></html>";
+
+    setHeader("Content-Type", "text/html");
+    send(os, errorPage.getBytes());
+  }
+
+  public void sendEerror(OutputStream os, int statusCode) throws IOException {
+    setStatusCode(statusCode);
+    sendEerror(os);
+  }
+
   public void executePHPRedneckStyle(Socket client, File file) throws IOException {
     LOGGER.warning("Executing PHP in a very redneck fashion");
 
-    ProcessBuilder pb = new ProcessBuilder("/usr/bin/php-cgi", "-d", "cgi.force_redirect=0", file.getAbsolutePath());
+    ProcessBuilder pb = new ProcessBuilder("/usr/bin/php-cgi", "-d", "cgi.force_redirect=0");
     pb.redirectErrorStream(true);
     pb.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
     for (Header header : request.getHeaders().values()) {
@@ -208,8 +222,8 @@ public class Response {
     if (getRequest().getHeader("Content-Type") != null) pb.environment().put("CONTENT_TYPE", getRequest().getHeader("Content-Type").getValue());
     if (getRequest().getBody() != null) pb.environment().put("CONTENT_LENGTH", Integer.toString(getRequest().getBody().length));
     if (getRequest().getUri().getRawQuery() != null) pb.environment().put("QUERY_STRING", getRequest().getUri().getRawQuery());
-    pb.environment().put("REMOTE_ADDR", client.getInetAddress().getHostAddress());
-    pb.environment().put("REMOTE_PORT", Integer.toString(client.getPort()));
+    if (getRequest().getHeader("X-Real-Ip") != null) pb.environment().put("REMOTE_ADDR", getRequest().getHeader("X-Real-Ip").getValue());
+    else pb.environment().put("REMOTE_ADDR", client.getInetAddress().getHostAddress());
     pb.environment().put("REQUEST_METHOD", getRequest().getMethod());
     pb.environment().put("REQUEST_URI", getRequest().getUri().toString());
     pb.environment().put("SCRIPT_FILENAME", file.getAbsolutePath());
