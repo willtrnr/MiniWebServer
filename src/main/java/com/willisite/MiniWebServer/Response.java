@@ -10,14 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.tika.Tika;
@@ -103,11 +101,11 @@ public class Response {
 
   @Override
   public String toString() {
-    return getVersion() + " " + getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode()));
+    return getVersion() + " " + getStatusCode() + " " + Utils.getStatusText(getStatusCode());
   }
 
   public void sendHeaders(OutputStream os) throws IOException {
-    setHeader("Date", Utils.RFC1123DATEFORMAT.format(new Date()));
+    setHeader("Date", Utils.formatDate(new Date()));
     BufferedOutputStream out = new BufferedOutputStream(os);
     out.write(new String(this.toString() + "\r\n").getBytes());
     for (Header header : headers.values()) {
@@ -162,17 +160,14 @@ public class Response {
   }
 
   public void send(OutputStream os, File file) throws IOException {
-    setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date(file.lastModified())));
+    setHeader("Last-Modified", Utils.formatDate(new Date(file.lastModified())));
     if (getRequest().getHeader("If-Modified-Since") != null) {
-      try {
-        Date since = Utils.RFC1123DATEFORMAT.parse(getRequest().getHeader("If-Modified-Since").getValue());
-        if (since.getTime() >= file.lastModified()) {
-          setStatusCode(304);
-          sendHeaders(os);
-          return;
-        }
-      } catch (ParseException e) {
-      } catch (NumberFormatException e) {}
+      Date since = Utils.parseDate(getRequest().getHeader("If-Modified-Since").getValue());
+      if (since != null && since.getTime() >= file.lastModified()) {
+        setStatusCode(304);
+        sendHeaders(os);
+        return;
+      }
     }
     setHeader("Content-Type", new Tika().detect(file));
     setHeader("Content-Length", Long.toString(file.length()));
@@ -185,18 +180,18 @@ public class Response {
 
   public void sendError(OutputStream os) throws IOException {
     String errorPage = "<!DOCTYPE html><html><head><title>" +
-      getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode())) +
+      getStatusCode() + " " + Utils.getStatusText(getStatusCode()) +
       "</title></head><body><h1>" +
-      getStatusCode() + " " + ((getStatusCode() == 418) ? "I'm a teapot" : HttpStatus.getStatusText(getStatusCode())) +
+      getStatusCode() + " " + Utils.getStatusText(getStatusCode()) +
       "</h1></body></html>";
 
     setHeader("Content-Type", "text/html");
     send(os, errorPage.getBytes());
   }
 
-  public void sendEerror(OutputStream os, int statusCode) throws IOException {
+  public void sendError(OutputStream os, int statusCode) throws IOException {
     setStatusCode(statusCode);
-    sendEerror(os);
+    sendError(os);
   }
 
   public void executePHPRedneckStyle(Socket client, File file) throws IOException {
@@ -256,7 +251,7 @@ public class Response {
       if (getStatusCode() < 300 || getStatusCode() > 399) setStatusCode(301);
       sendHeaders(client.getOutputStream());
     } else {
-      setHeader("Last-Modified", Utils.RFC1123DATEFORMAT.format(new Date()));
+      setHeader("Last-Modified", Utils.formatDate(new Date()));
       setHeader("Content-Length", Long.toString(bos.toByteArray().length));
       sendStream(client.getOutputStream(), new ByteArrayInputStream(bos.toByteArray()));
     }
