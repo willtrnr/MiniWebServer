@@ -14,3 +14,6 @@ target/
 # Test htdocs
 htdocs/
 
+# Temp files
+*.log
+*.lck

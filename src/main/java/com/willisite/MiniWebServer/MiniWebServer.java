@@ -27,7 +27,7 @@ Server: MiniWebServer
 */
 
 public final class MiniWebServer {
-  private static Logger LOGGER = LoggerFactory.getLogger("MiniWebServer");
+  private static Logger LOGGER = LoggerFactory.getLogger();
 
   public static void main(String[] args) {
     String docRoot = ".";

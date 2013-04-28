@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 public class HttpServer implements Runnable {
-  private static final Logger LOGGER = LoggerFactory.getLogger("HttpServer");
+  private static final Logger LOGGER = LoggerFactory.getLogger();
   private final Thread t;
 
   private int port = 80;

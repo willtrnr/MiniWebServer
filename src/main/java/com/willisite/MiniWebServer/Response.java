@@ -21,7 +21,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.apache.tika.Tika;
 
 public class Response {
-  private static final Logger LOGGER = LoggerFactory.getLogger("Response");
+  private static final Logger LOGGER = LoggerFactory.getLogger();
 
   private Request request = new Request();
   private String version = "HTTP/1.0";

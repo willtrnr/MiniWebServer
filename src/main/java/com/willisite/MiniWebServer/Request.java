@@ -23,8 +23,6 @@ class InterruptedRequestException extends RuntimeException {
 }
 
 public class Request {
-  private static final Logger LOGGER = LoggerFactory.getLogger("Request");
-
   private String method = "GET";
   private URI uri = null;
   private String version = "HTTP/1.0";

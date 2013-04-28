@@ -1,9 +1,12 @@
 package com.willisite.MiniWebServer;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
@@ -15,12 +18,7 @@ final class LogFormatter extends Formatter {
   @Override
   public String format(LogRecord record) {
     StringBuilder sb = new StringBuilder();
-    sb.append(new Date(record.getMillis()))
-      .append(" - ")
-      .append(record.getLevel().getLocalizedName())
-      .append(": ")
-      .append(formatMessage(record))
-      .append(LINE_SEPARATOR);
+    sb.append(new Date(record.getMillis())).append(" - ").append(record.getLevel().getLocalizedName()).append(": ").append(formatMessage(record)).append(LINE_SEPARATOR);
     if (record.getThrown() != null) {
       try {
         StringWriter sw = new StringWriter();
@@ -36,14 +34,29 @@ final class LogFormatter extends Formatter {
 
 
 public final class LoggerFactory {
-  private static final LogFormatter formatter = new LogFormatter();
+  private static final LogFormatter FORMATTER = new LogFormatter();
+  private static final HashMap<String, Logger> LOGGERS = new HashMap<String, Logger>();
 
-  public static final Logger getLogger(String name) {
-    Logger logger = Logger.getLogger(name);
-    logger.setUseParentHandlers(false);
-    Handler ch = new ConsoleHandler();
-    ch.setFormatter(formatter);
-    logger.addHandler(ch);
-    return logger;
+  public static Logger getLogger(String name) {
+    if (!LOGGERS.containsKey(name)) {
+      Logger logger = Logger.getLogger(name);
+      logger.setUseParentHandlers(false);
+      Handler ch = new ConsoleHandler();
+      ch.setFormatter(FORMATTER);
+      logger.addHandler(ch);
+      try {
+        Handler fh = new FileHandler("./" + name + ".%u.log");
+        fh.setFormatter(FORMATTER);
+        logger.addHandler(fh);
+      } catch (IOException e) {}
+      LOGGERS.put(name, logger);
+      return logger;
+    } else {
+      return LOGGERS.get(name);
+    }
+  }
+
+  public static Logger getLogger() {
+    return getLogger("MiniWebServer");
   }
 }

@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.TimeZone;
 import org.apache.commons.httpclient.HttpStatus;
 
-public final class Utils {
+public class Utils {
   private static final SimpleDateFormat FORMAT_ASCTIME = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
   private static final SimpleDateFormat FORMAT_RFC1036 = new SimpleDateFormat("EEE, dd-MMM-yy HH:mm:ss zzz");
   private static final SimpleDateFormat FORMAT_RFC1123 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");

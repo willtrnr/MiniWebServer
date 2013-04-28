@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 
 public class ConnectionHandler implements Runnable {
-  private static final Logger LOGGER = LoggerFactory.getLogger("ConnectionHandler");
+  private static final Logger LOGGER = LoggerFactory.getLogger();
   private static final String TEAPOT = "                       (\n            _           ) )\n         _,(_)._        ((\n    ___,(_______).        )\n  ,'__.   /       \\    /\\_\n /,' /  |\"\"|       \\  /  /\n| | |   |__|       |,'  /\n \\`.|                  /\n  `. :           :    /\n    `.            :.,'\n      `-.________,-'\n";
   private final Thread t;
 
