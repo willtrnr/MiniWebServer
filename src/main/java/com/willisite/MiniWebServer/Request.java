@@ -1,6 +1,5 @@
 package com.willisite.MiniWebServer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -140,14 +139,9 @@ public class Request {
         throw new InvalidHeaderException("Invalid value for Content-Length");
       }
       if (len > 0) {
-        int read = 0;
-        byte[] buffer = new byte[1024*8];
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while (len > 0) {
-          len -= (read = is.read(buffer, 0, (len > 1024*8) ? 1024*8 : len));
-          bos.write(buffer, 0, read);
-        }
-        setBody(bos.toByteArray());
+        byte[] buffer = new byte[len];
+        is.read(buffer);
+        setBody(buffer);
       }
     }
   }
