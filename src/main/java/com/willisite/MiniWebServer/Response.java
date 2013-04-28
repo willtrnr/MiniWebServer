@@ -68,9 +68,7 @@ public class Response {
   }
 
   public void setStatusCode(int statusCode) {
-    if (statusCode >= 100 && statusCode <= 599) {
-      this.statusCode = statusCode;
-    }
+    if (statusCode >= 100 && statusCode <= 599) this.statusCode = statusCode;
   }
 
   public Header getHeader(String key) {

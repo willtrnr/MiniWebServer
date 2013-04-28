@@ -129,7 +129,7 @@ public class Request {
     String requestLine = Utils.readLine(is);
     if (requestLine == null) throw new InterruptedRequestException("No request line was received");
     String line;
-    while (!StringUtils.isBlank(line = Utils.readLine(is))) setHeader(line);
+    while (!StringUtils.isBlank(line = Utils.readLine(is))) setHeader(line.trim());
     parseRequest(requestLine);
     if (getHeader("Content-Length") != null) {
       int len = 0;
