@@ -7,9 +7,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.httpclient.HttpStatus;
 
 public class Utils {
+  private static Lock LOCK = new ReentrantLock();
+
   private static final SimpleDateFormat FORMAT_ASCTIME = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
   private static final SimpleDateFormat FORMAT_RFC1036 = new SimpleDateFormat("EEE, dd-MMM-yy HH:mm:ss zzz");
   private static final SimpleDateFormat FORMAT_RFC1123 = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -29,8 +33,13 @@ public class Utils {
   }
 
   public static String formatDate(Date date) {
-    FORMAT_RFC1123.setTimeZone(TimeZone.getTimeZone("GMT"));
-    return FORMAT_RFC1123.format(date);
+    LOCK.lock();
+      try {
+      FORMAT_RFC1123.setTimeZone(TimeZone.getTimeZone("GMT"));
+      return FORMAT_RFC1123.format(date);
+    } finally {
+      LOCK.unlock();
+    }
   }
 
   public static Date parseDate(String date) {

@@ -13,6 +13,7 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
@@ -26,7 +27,7 @@ public class Response {
   private Request request = new Request();
   private String version = "HTTP/1.0";
   private int statusCode = 200;
-  private HashMap<String, Header> headers = new HashMap<String, Header>();
+  private Map<String, Header> headers = new HashMap<String, Header>();
 
   public Response() {
     setHeader("Server", "MiniWebServer/0.0.1");
@@ -76,7 +77,14 @@ public class Response {
   }
 
   public void setHeader(Header header) {
-    if (!StringUtils.isBlank(header.getValue())) headers.put(header.getKey(), header);
+    if (!StringUtils.isBlank(header.getValue())) {
+      if (header.getKey().equals("Set-Cookie")) {
+        if (!headers.containsKey("Set-Cookie")) headers.put("Set-Cookie", new MultiHeader("Set-Cookie"));
+        headers.get("Set-Cookie").setValue(header.getValue());
+      } else {
+        headers.put(header.getKey(), header);
+      }
+    }
   }
 
   public void setHeader(String key, String value) {
@@ -90,10 +98,10 @@ public class Response {
   }
 
   public void removeHeader(String key) {
-    headers.remove(key);
+    headers.remove(WordUtils.capitalizeFully(key, '-'));
   }
 
-  public HashMap<String, Header> getHeaders() {
+  public Map<String, Header> getHeaders() {
     return headers;
   }
 
@@ -241,6 +249,10 @@ public class Response {
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     while ((length = in.read(buffer)) > 0) bos.write(buffer, 0, length);
 
+    if (getHeader("PHP Warning") != null) {
+      LOGGER.warning(getHeader("PHP Warning").getValue());
+      removeHeader("PHP Warning");
+    }
     if (getHeader("Status") != null) {
       setStatusCode(Integer.parseInt(getHeader("Status").getValue().substring(0, 2)));
       removeHeader("Status");

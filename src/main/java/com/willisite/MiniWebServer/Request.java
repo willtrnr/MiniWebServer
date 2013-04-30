@@ -2,20 +2,22 @@ package com.willisite.MiniWebServer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
-class InvalidRequestException extends RuntimeException {
+class InvalidRequestException extends Exception {
   public InvalidRequestException(String message) {
     super(message);
   }
 }
 
-class InterruptedRequestException extends RuntimeException {
+class InterruptedRequestException extends Exception {
   public InterruptedRequestException(String message) {
     super(message);
   }
@@ -25,7 +27,7 @@ public class Request {
   private String method = "GET";
   private URI uri = null;
   private String version = "HTTP/1.0";
-  private HashMap<String, Header> headers = new HashMap<String, Header>();
+  private Map<String, Header> headers = new HashMap<String, Header>();
   private byte[] body = null;
 
   public Request()  {
@@ -38,20 +40,20 @@ public class Request {
     setUri(uri);
   }
 
-  public Request(String method, String uri) throws URISyntaxException {
+  public Request(String method, String uri) throws URISyntaxException, InvalidRequestException {
     this(uri);
     setMethod(method);
   }
 
-  public Request(InputStream is) throws IOException, URISyntaxException {
-    read(is);
+  public Request(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, IOException, URISyntaxException {
+    read(is, os);
   }
 
   public String getMethod() {
     return method;
   }
 
-  public void setMethod(String method) {
+  public void setMethod(String method) throws InvalidRequestException {
     method = method.toUpperCase();
     if (method.matches("^(OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)$")) this.method = method;
     else throw new InvalidRequestException("Invalid method");
@@ -66,7 +68,7 @@ public class Request {
   }
 
   public void setUri(String uri) throws URISyntaxException {
-    setUri(new URI(uri));
+    setUri(new URI(uri.replace("^\\.\\./", "")));
   }
 
   public String getVersion() {
@@ -97,10 +99,10 @@ public class Request {
   }
 
   public void removeHeader(String key) {
-    headers.remove(key);
+    headers.remove(WordUtils.capitalizeFully(key, '-'));
   }
 
-  public HashMap<String, Header> getHeaders() {
+  public Map<String, Header> getHeaders() {
     return headers;
   }
 
@@ -117,7 +119,7 @@ public class Request {
     return getMethod() + " " + getUri() + " " + getVersion();
   }
 
-  public void parseRequest(String request) throws URISyntaxException {
+  public void parseRequest(String request) throws InvalidRequestException, URISyntaxException {
     String[] parts = request.trim().split("\\s+");
     if (parts.length != 3) throw new InvalidRequestException("Invalid request line format: " + request);
     setMethod(parts[0]);
@@ -125,7 +127,7 @@ public class Request {
     setVersion(parts[2]);
   }
 
-  public void read(InputStream is) throws IOException, URISyntaxException {
+  public void read(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, IOException, URISyntaxException {
     String requestLine = Utils.readLine(is);
     if (requestLine == null) throw new InterruptedRequestException("No request line was received");
     String line;
