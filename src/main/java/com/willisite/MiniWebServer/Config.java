@@ -33,6 +33,7 @@ public class Config {
         LOGGER.warning("Invalid value for \"port\" in \"" + filename + "\", proceeding with default value");
       }
       setDocRoot(prop.getProperty("docroot", "."));
+      setListDir(prop.getProperty("listdir", "0").equals("1") || prop.getProperty("listdir", "false").toLowerCase().equals("true"));
     } catch (IOException e) {
       LOGGER.info("Creating \"" + filename + "\" with default values");
       save(filename);
@@ -44,6 +45,7 @@ public class Config {
       Properties prop = new Properties();
       prop.setProperty("port", Integer.toString(getPort()));
       prop.setProperty("docroot", getDocRoot());
+      prop.setProperty("listdir", (getListDir()) ? "1" : "0");
       prop.store(new FileOutputStream(filename), null);
     } catch (IOException e) {
       LOGGER.warning("Could not create \"" + filename + "\": " + e.getMessage());

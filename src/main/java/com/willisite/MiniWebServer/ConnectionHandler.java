@@ -47,8 +47,6 @@ public class ConnectionHandler implements Runnable {
               response.setStatusCode(200);
               if (file.getName().endsWith(".php")) response.executePHPRedneckStyle(client, file);
               else response.send(client.getOutputStream(), file);
-            } else if (file.isDirectory() && Config.Instance().getListDir()) {
-              // TODO: List dir
             } else if (file.isDirectory()) {
               if (new File(file, "index.htm").isFile()) {
                 response.setStatusCode(200);
@@ -59,6 +57,20 @@ public class ConnectionHandler implements Runnable {
               } else if (new File(file, "index.php").isFile()) {
                 response.setStatusCode(200);
                 response.executePHPRedneckStyle(client, new File(file, "index.php"));
+              } else if (Config.Instance().getListDir()) {
+                response.setHeader("Content-Type", "text/html");
+                StringBuilder listing = new StringBuilder();
+                listing.append("<!DOCTYPE html><html><head><title>" + request.getUri().getPath() + "</title></head><body><h1>" + request.getUri().getPath() + "</h1><ul><li><a href=\"../\">..</a></li>");
+                for (File f : file.listFiles()) {
+                  listing.append("<li><a href=\"");
+                  listing.append(f.getName());
+                  if (f.isDirectory()) listing.append("/");
+                  listing.append("\">");
+                  listing.append(f.getName());
+                  listing.append("</a></li>");
+                }
+                listing.append("</ul></html>");
+                response.send(client.getOutputStream(), listing.toString().getBytes());
               } else {
                 response.setStatusCode(403);
                 response.sendError(client.getOutputStream());
