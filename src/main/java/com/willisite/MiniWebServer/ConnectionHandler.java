@@ -12,14 +12,11 @@ public class ConnectionHandler implements Runnable {
   private static final String TEAPOT = "                       (\n            _           ) )\n         _,(_)._        ((\n    ___,(_______).        )\n  ,'__.   /       \\    /\\_\n /,' /  |\"\"|       \\  /  /\n| | |   |__|       |,'  /\n \\`.|                  /\n  `. :           :    /\n    `.            :.,'\n      `-.________,-'\n";
   private final Thread t;
 
-
   private Socket client;
-  private String docRoot;
 
-  public ConnectionHandler(Socket client, String docRoot) {
+  public ConnectionHandler(Socket client) {
     t = new Thread(this);
     this.client = client;
-    this.docRoot = docRoot;
   }
 
   public void start() {
@@ -44,11 +41,14 @@ public class ConnectionHandler implements Runnable {
             response.send(client.getOutputStream(), TEAPOT.getBytes());
           } else {
             // OMG OMG OMG OMG TO FUCKING DO: FIX THIS SECURITY HOLE AND SHIT HANDLING ASAP
-            File file = new File(docRoot, request.getUri().getPath());
+            // I think it's fixed
+            File file = new File(Config.Instance().getDocRoot(), request.getUri().getPath());
             if (file.isFile()) {
               response.setStatusCode(200);
               if (file.getName().endsWith(".php")) response.executePHPRedneckStyle(client, file);
               else response.send(client.getOutputStream(), file);
+            } else if (file.isDirectory() && Config.Instance().getListDir()) {
+              // TODO: List dir
             } else if (file.isDirectory()) {
               if (new File(file, "index.htm").isFile()) {
                 response.setStatusCode(200);

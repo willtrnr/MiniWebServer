@@ -9,17 +9,8 @@ public class HttpServer implements Runnable {
   private static final Logger LOGGER = LoggerFactory.getLogger();
   private final Thread t;
 
-  private int port = 80;
-  private String docRoot = ".";
-
   public HttpServer() {
     t = new Thread(this);
-  }
-
-  public HttpServer(int port, String docRoot) {
-    this();
-    this.port = port;
-    this.docRoot = docRoot;
   }
 
   public void start() {
@@ -29,12 +20,12 @@ public class HttpServer implements Runnable {
   @Override
   public void run() {
     try {
-      ServerSocket server = new ServerSocket(port);
-      LOGGER.info("MiniWebServer serving \"" + docRoot + "\" on port " + Integer.toString(port));
+      ServerSocket server = new ServerSocket(Config.Instance().getPort());
+      LOGGER.info("MiniWebServer serving \"" + Config.Instance().getDocRoot() + "\" on port " + Integer.toString(Config.Instance().getPort()));
       while (true) {
         try {
           Socket client = server.accept();
-          ConnectionHandler handler = new ConnectionHandler(client, docRoot);
+          ConnectionHandler handler = new ConnectionHandler(client);
           handler.start();
         } catch (IOException e) {
           LOGGER.warning("Client IOException: " + e.getMessage());

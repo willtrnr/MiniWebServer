@@ -244,6 +244,7 @@ public class Response {
 
     String line;
     while (!StringUtils.isBlank(line = Utils.readLine(in))) setHeader(line);
+
     int length = 0;
     byte[] buffer = new byte[1024*8];
     ByteArrayOutputStream bos = new ByteArrayOutputStream();

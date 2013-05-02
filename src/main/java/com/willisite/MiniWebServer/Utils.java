@@ -43,18 +43,23 @@ public class Utils {
   }
 
   public static Date parseDate(String date) {
+    LOCK.lock();
     try {
-      return FORMAT_RFC1123.parse(date);
-    } catch (ParseException e) {
-    } catch (NumberFormatException e) {}
-    try {
-      return FORMAT_RFC1036.parse(date);
-    } catch (ParseException e) {
-    } catch (NumberFormatException e) {}
-    try {
-      return FORMAT_ASCTIME.parse(date);
-    } catch (ParseException e) {
-    } catch (NumberFormatException e) {}
-    return null;
+      try {
+        return FORMAT_RFC1123.parse(date);
+      } catch (ParseException e) {
+      } catch (NumberFormatException e) {}
+      try {
+        return FORMAT_RFC1036.parse(date);
+      } catch (ParseException e) {
+      } catch (NumberFormatException e) {}
+      try {
+        return FORMAT_ASCTIME.parse(date);
+      } catch (ParseException e) {
+      } catch (NumberFormatException e) {}
+      return null;
+    } finally {
+      LOCK.unlock();
+    }
   }
 }
