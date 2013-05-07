@@ -1,4 +1,4 @@
-package com.willisite.MiniWebServer;
+package net.archwill.MiniWebServer;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;

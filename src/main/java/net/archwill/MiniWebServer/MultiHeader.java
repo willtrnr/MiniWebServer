@@ -1,4 +1,4 @@
-package com.willisite.MiniWebServer;
+package net.archwill.MiniWebServer;
 
 import java.util.ArrayList;
 import java.util.List;

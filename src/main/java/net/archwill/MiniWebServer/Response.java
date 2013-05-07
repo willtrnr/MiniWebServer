@@ -1,4 +1,4 @@
-package com.willisite.MiniWebServer;
+package net.archwill.MiniWebServer;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

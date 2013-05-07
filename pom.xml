@@ -4,7 +4,7 @@
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.willisite.MiniWebServer</groupId>
+  <groupId>net.archwill.MiniWebServer</groupId>
   <artifactId>MiniWebServer</artifactId>
   <version>0.0.1</version>
   <dependencies>
@@ -62,7 +62,7 @@
           </descriptorRefs>
           <archive>
             <manifest>
-              <mainClass>com.willisite.MiniWebServer.MiniWebServer</mainClass>
+              <mainClass>net.archwill.MiniWebServer.MiniWebServer</mainClass>
             </manifest>
           </archive>
         </configuration>

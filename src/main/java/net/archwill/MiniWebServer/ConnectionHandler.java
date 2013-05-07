@@ -1,4 +1,4 @@
-package com.willisite.MiniWebServer;
+package net.archwill.MiniWebServer;
 
 import java.io.File;
 import java.io.IOException;
