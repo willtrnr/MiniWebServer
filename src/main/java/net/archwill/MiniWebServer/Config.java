@@ -1,5 +1,6 @@
 package net.archwill.MiniWebServer;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,6 +58,7 @@ public class Config {
   }
 
   public void setDocRoot(String docRoot) {
+    if (!new File(docRoot).isDirectory()) LOGGER.warning("The \"docroot\" does not exist, proceeding anyway");
     this.docRoot = docRoot;
   }
 
@@ -65,7 +67,8 @@ public class Config {
   }
 
   public void setPort(int port) {
-    this.port = port;
+    if (port >= 1 && port <= 32767) this.port = port;
+    else LOGGER.warning("Invalid value for \"port\", proceeding with default value");
   }
 
   public Boolean getListDir() {
