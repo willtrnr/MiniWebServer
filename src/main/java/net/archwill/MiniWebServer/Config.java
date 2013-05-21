@@ -13,7 +13,7 @@ public class Config {
   private static Config INSTANCE = null;
 
   private String docRoot = ".";
-  private int port = 8080;
+  private int port = 80;
   private Boolean listDir = false;
   private int maxReq = 5;
 
@@ -30,7 +30,7 @@ public class Config {
       Properties prop = new Properties();
       prop.load(new FileInputStream(filename));
       try {
-        setPort(Integer.parseInt(prop.getProperty("port", "8080")));
+        setPort(Integer.parseInt(prop.getProperty("port", "80")));
       } catch (NumberFormatException e) {
         LOGGER.warning("Invalid value for \"port\" in \"" + filename + "\", proceeding with default value");
       }
