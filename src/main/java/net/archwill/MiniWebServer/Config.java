@@ -15,7 +15,7 @@ public class Config {
   private String docRoot = ".";
   private int port = 8080;
   private Boolean listDir = false;
-  private int maxReq = 3;
+  private int maxReq = 5;
 
   public static Config Instance() {
     if (INSTANCE == null) {
@@ -37,7 +37,7 @@ public class Config {
       setDocRoot(prop.getProperty("docroot", "."));
       setListDir(prop.getProperty("listdir", "0").equals("1") || prop.getProperty("listdir", "false").toLowerCase().equals("true"));
       try {
-        setMaxReq(Integer.parseInt(prop.getProperty("maxreq", "3")));
+        setMaxReq(Integer.parseInt(prop.getProperty("maxreq", "5")));
       } catch (NumberFormatException e) {
         LOGGER.warning("Invalid value for \"maxreq\" in \"" + filename + "\", proceeding with default value");
       }

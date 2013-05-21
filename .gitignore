@@ -11,8 +11,9 @@ target/
 # Sublime Text 2
 *.sublime-*
 
-# Test htdocs
+# Test files
 htdocs/
+server.conf
 
 # Temp files
 *.log
