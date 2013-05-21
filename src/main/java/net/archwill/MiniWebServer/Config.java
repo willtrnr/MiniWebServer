@@ -15,6 +15,7 @@ public class Config {
   private String docRoot = ".";
   private int port = 8080;
   private Boolean listDir = false;
+  private int maxReq = 3;
 
   public static Config Instance() {
     if (INSTANCE == null) {
@@ -35,6 +36,11 @@ public class Config {
       }
       setDocRoot(prop.getProperty("docroot", "."));
       setListDir(prop.getProperty("listdir", "0").equals("1") || prop.getProperty("listdir", "false").toLowerCase().equals("true"));
+      try {
+        setMaxReq(Integer.parseInt(prop.getProperty("maxreq", "3")));
+      } catch (NumberFormatException e) {
+        LOGGER.warning("Invalid value for \"maxreq\" in \"" + filename + "\", proceeding with default value");
+      }
     } catch (IOException e) {
       LOGGER.info("Creating \"" + filename + "\" with default values");
       save(filename);
@@ -47,6 +53,7 @@ public class Config {
       prop.setProperty("port", Integer.toString(getPort()));
       prop.setProperty("docroot", getDocRoot());
       prop.setProperty("listdir", (getListDir()) ? "1" : "0");
+      prop.setProperty("maxreq", Integer.toString(getMaxReq()));
       prop.store(new FileOutputStream(filename), null);
     } catch (IOException e) {
       LOGGER.warning("Could not create \"" + filename + "\": " + e.getMessage());
@@ -77,5 +84,13 @@ public class Config {
 
   public void setListDir(Boolean listDir) {
     this.listDir = listDir;
+  }
+
+  public int getMaxReq() {
+    return maxReq;
+  }
+
+  public void setMaxReq(int maxReq) {
+    this.maxReq = maxReq;
   }
 }

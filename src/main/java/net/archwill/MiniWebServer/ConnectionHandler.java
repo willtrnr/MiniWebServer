@@ -31,7 +31,7 @@ public class ConnectionHandler implements Runnable {
         try {
           Request request = new Request(client.getInputStream(), client.getOutputStream());
           Response response = new Response(request);
-          if ((request.getMethod().equals("GET") || request.getMethod().equals("HEAD")) && response.getHeader("Connection") != null && response.getHeader("Connection").getValue().equals("keep-alive")) maxRequests = 3;
+          if ((request.getMethod().equals("GET") || request.getMethod().equals("HEAD")) && response.getHeader("Connection") != null && response.getHeader("Connection").getValue().equals("keep-alive")) maxRequests = Config.Instance().getMaxReq();
           else maxRequests = 1;
           if (r >= maxRequests) response.setHeader("Connection", "close");
 
