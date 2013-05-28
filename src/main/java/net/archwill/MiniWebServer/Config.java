@@ -58,7 +58,7 @@ public class Config {
       Properties prop = new Properties();
       prop.setProperty("port", Integer.toString(getPort()));
       prop.setProperty("docroot", getDocRoot());
-      prop.setProperty("listdir", (getListDir()) ? "1" : "0");
+      prop.setProperty("listdir", (getListDir()) ? "true" : "false");
       prop.setProperty("maxreq", Integer.toString(getMaxReq()));
       prop.store(new FileOutputStream(filename), null);
     } catch (IOException e) {
