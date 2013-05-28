@@ -113,9 +113,9 @@ public class Response {
   public void sendHeaders(OutputStream os) throws IOException {
     setHeader("Date", Utils.formatDate(new Date()));
     BufferedOutputStream out = new BufferedOutputStream(os);
-    out.write(new String(this.toString() + "\r\n").getBytes());
+    out.write((this.toString() + "\r\n").getBytes());
     for (Header header : headers.values()) {
-      out.write(new String(header.toString() + "\r\n").getBytes());
+      out.write((header.toString() + "\r\n").getBytes());
     }
     out.write("\r\n".getBytes());
     out.flush();

@@ -17,6 +17,12 @@ class InvalidRequestException extends Exception {
   }
 }
 
+class InvalidMethodException extends Exception {
+  public InvalidMethodException(String message) {
+    super(message);
+  }
+}
+
 class InterruptedRequestException extends Exception {
   public InterruptedRequestException(String message) {
     super(message);
@@ -40,12 +46,12 @@ public class Request {
     setUri(uri);
   }
 
-  public Request(String method, String uri) throws URISyntaxException, InvalidRequestException {
+  public Request(String method, String uri) throws URISyntaxException, InvalidMethodException {
     this(uri);
     setMethod(method);
   }
 
-  public Request(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, IOException, URISyntaxException {
+  public Request(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, InvalidMethodException, IOException, URISyntaxException {
     read(is, os);
   }
 
@@ -53,10 +59,11 @@ public class Request {
     return method;
   }
 
-  public void setMethod(String method) throws InvalidRequestException {
+  public void setMethod(String method) throws InvalidMethodException {
     method = method.toUpperCase();
-    if (method.matches("^(OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)$")) this.method = method;
-    else throw new InvalidRequestException("Invalid method");
+    //if (method.matches("^(OPTIONS|GET|HEAD|POST|PUT|DELETE|TRACE|CONNECT)$")) this.method = method;
+    if (method.matches("^(GET|HEAD|POST|PUT|DELETE)$")) this.method = method;
+    else throw new InvalidMethodException("Invalid method");
   }
 
   public URI getUri() {
@@ -119,7 +126,7 @@ public class Request {
     return getMethod() + " " + getUri() + " " + getVersion();
   }
 
-  public void parseRequest(String request) throws InvalidRequestException, URISyntaxException {
+  public void parseRequest(String request) throws InvalidRequestException, InvalidMethodException, URISyntaxException {
     String[] parts = request.trim().split("\\s+");
     if (parts.length != 3) throw new InvalidRequestException("Invalid request line format: " + request);
     setMethod(parts[0]);
@@ -127,7 +134,7 @@ public class Request {
     setVersion(parts[2]);
   }
 
-  public void read(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, IOException, URISyntaxException {
+  public void read(InputStream is, OutputStream os) throws InterruptedRequestException, InvalidRequestException, InvalidMethodException, IOException, URISyntaxException {
     String requestLine = Utils.readLine(is);
     if (requestLine == null) throw new InterruptedRequestException("No request line was received");
     String line;
