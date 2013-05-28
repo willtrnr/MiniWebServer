@@ -19,11 +19,17 @@ public class Config {
 
   public static Config Instance() {
     if (INSTANCE == null) {
-      INSTANCE = new Config();
-      INSTANCE.load("server.conf");
+      synchronized (Config.class) {
+        if (INSTANCE == null) {
+          INSTANCE = new Config();
+          INSTANCE.load("server.conf");
+        }
+      }
     }
     return INSTANCE;
   }
+
+  private Config() {}
 
   public void load(String filename) {
     try {

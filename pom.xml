@@ -62,7 +62,7 @@
           </descriptorRefs>
           <archive>
             <manifest>
-              <mainClass>net.archwill.MiniWebServer.MiniWebServer</mainClass>
+              <mainClass>net.archwill.MiniWebServer.Main</mainClass>
             </manifest>
           </archive>
         </configuration>

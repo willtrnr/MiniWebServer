@@ -22,7 +22,7 @@ Server: MiniWebServer/0.0.1
       `-.________,-'
 */
 
-public final class MiniWebServer {
+public final class Main {
   private static Logger LOGGER = LoggerFactory.getLogger();
 
   public static void main(String[] args) {
