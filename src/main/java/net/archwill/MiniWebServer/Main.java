@@ -38,7 +38,7 @@ public final class Main {
     LOGGER.info("Content-Length: 281");
     LOGGER.info("Content-Type: text/plain");
     LOGGER.info("Connection: close");
-    LOGGER.info("Srver: MiniwebServer/0.0.1");
+    LOGGER.info("Srver: MiniWebServer/0.0.1");
     LOGGER.info("");
     LOGGER.info("                       (");
     LOGGER.info("            _           ) )");
